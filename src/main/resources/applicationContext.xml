@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+			    http://www.springframework.org/schema/beans/spring-beans.xsd
+			    http://www.springframework.org/schema/context
+			    http://www.springframework.org/schema/context/spring-context.xsd
+			    http://www.springframework.org/schema/tx
+			    http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:property-placeholder location="classpath:c3p0.properties"/>
+    <!-- 数据库连接池 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <!-- 连接池4大组件 -->
+<!--        <property name="driverClass" value="com.mysql.cj.jdbc.Driver"/>-->
+<!--        <property name="jdbcUrl" value="jdbc:mysql://localhost:3307/student?serverTimezone=Asia/Shanghai&amp;characterEncoding=utf8&amp;useUnicode=true&amp;useSSL=false"/>-->
+<!--        <property name="user" value="root"/>-->
+<!--        <property name="password" value="123456"/>-->
+        <property name="driverClass" value="${c3p0.driverClass}"/>
+        <property name="jdbcUrl" value="${c3p0.jdbcUrl}"/>
+        <property name="user" value="${c3p0.user}"/>
+        <property name="password" value="${c3p0.password}"/>
+        <!--初始化连接数  取值要在minPoolSize和maxPoolSize之间（可包含，闭区间） 默认值：3 -->
+        <property name="initialPoolSize" value="${c3p0.initialPoolSize}"/>
+        <!-- 最大连接数 （连接池中的连接数不能超过maxPoolSize最大连接数） 默认值：15-->
+        <property name="maxPoolSize" value="${c3p0.maxPoolSize}"/>
+        <!--最小连接数  默认值：3  -->
+        <property name="minPoolSize" value="${c3p0.minPoolSize}"/>
+        <!-- c3p0连接池中数据连接不够时（无空闲连接可用）,一次增长的个数（增长不能超过maxPoolSize最大连接个数） 默认值：3 -->
+        <property name="acquireIncrement" value="${c3p0.acquireIncrement}"/>
+        <!-- 连接的最大空闲时间，如果超过这个时间还没有被使用，就断开这个连接（设置为0或负数，就永远都不会被断开） 单位：秒  默认值 ：0 -->
+        <property name="maxIdleTime" value="${c3p0.maxIdleTime}"/>
+
+        <!-- 从数据库获取新连接失败后重复尝试的次数。小于等于0表示无限次  默认值: 30-->
+        <property name="acquireRetryAttempts" value="${c3p0.acquireRetryAttempts}"/>
+        <!-- 两次连接的中间间隔时间（重新尝试的时间间隔）  单位：毫秒  默认值：1000 -->
+        <property name="acquireRetryDelay" value="${c3p0.acquireRetryDelay}"/>
+        <!-- 连接关闭时，是否将所有未提交的操作进行事务回滚  默认值：false -->
+        <property name="autoCommitOnClose" value="${c3p0.autoCommitOnClose}"/>
+    </bean>
+
+    <!-- 配置SqlSessionFactory对象 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 配置MyBaties全局配置文件:mybatis-config.xml -->
+        <property name="typeAliasesPackage" value="com.cheng.blog.pojo"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+    </bean>
+    <!-- 配置扫描mapper接口包，动态实现mapper接口注入到spring容器中 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">    <!-- 注入sqlSessionFactory -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!-- 给出需要扫描mapper接口包 -->
+        <property name="basePackage" value="com.cheng.blog.mapper"/>
+    </bean>
+
+    <context:component-scan base-package="com.cheng.blog.service"/>
+    <tx:annotation-driven/>
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+</beans>
